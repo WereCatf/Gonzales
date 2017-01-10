@@ -5,7 +5,7 @@ e.g. mux, pin-state and pull-up/-down.
 
 The tool can also print out a prettyish graph of either of the
 C.H.I.P.'s two pin-headers:
-![Pin-header printout](/images/2017/01/gonzales.png)
+![Pin-header printout](/img/gonzales.png)
 
 ## Warning
 Due to directly manipulating the registers it bypasses the
