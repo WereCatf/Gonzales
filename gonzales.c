@@ -112,8 +112,10 @@ int main(int argc, char* argv[])
 		printf("The tool accepts the following commands: readPin, readPull, readMux,\n");
 		printf("writePin, writePull, writeMux, header1 and header2. All the\n");
 		printf("read-commands follow the same format, ie. `gonzales command port pin`\n");
-		printf("where port is a number ranging from 0 to 6 and pin is 0 to 31. Port 0\n");
-		printf("corresponds to port A, port 1 to port B and so on.\n\n");
+		printf("where port is a number ranging from 0 to 6 or a character from a to g,\n");
+		printf("and pin is 0 to 31. Port 0 corresponds to port A, port 1 to port B\n");
+		printf("and so on, and if given as a character, the character can be lowercase\n");
+		printf("or uppercase. Example: `gonzales readPin d 25` to read pin PD25.\n\n");
 		printf("The format for the write-commands is the same, except for the value\n");
 		printf("given:\n");
 		printf("`writePin [port] [pin] [low/LOW/high/HIGH/0/1]`\n");
