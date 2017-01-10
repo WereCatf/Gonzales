@@ -109,14 +109,20 @@ int main(int argc, char* argv[])
 		printf("know what they are doing and you can very much mess things\n");
 		printf("with this.\n\n");
 		printf("YOU ASSUME ALL RESPONSIBILITY FOR USE OF THIS TOOL.\n\n");
-		printf("Supported pin-manipulation commands are:\n");
-		printf("readPin, readPull, readMux, \n");
-		printf("writePin, writePull, writeMux\n");
-		printf("Example to enable pull-up on PB2 : gonzales writePull b 2 up\n\n");
-		printf("You can also issue the command header1 or header2 to\n");
-		printf("print out information on all the pins on the corresponding\n");
-		printf("header, ie. to print out a nice drawing of J13-header call:\n");
-		printf("gonzales header1\n");
+		printf("The tool accepts the following commands: readPin, readPull, readMux,\n");
+		printf("writePin, writePull, writeMux, header1 and header2. All the\n");
+		printf("read-commands follow the same format, ie. `gonzales command port pin`\n");
+		printf("where port is a number ranging from 0 to 6 and pin is 0 to 31. Port 0\n");
+		printf("corresponds to port A, port 1 to port B and so on.\n\n");
+		printf("The format for the write-commands is the same, except for the value\n");
+		printf("given:\n");
+		printf("`writePin [port] [pin] [low/LOW/high/HIGH/0/1]`\n");
+		printf("`writeMux [port] [pin] [in/input/INPUT/out/output/OUTPUT/0-6]`\n");
+		printf("  -- 0 means INPUT, 1 means OUTPUT and the rest depends on the pin,\n");
+		printf("  and the command takes no human-readable input for those.\n");
+		printf("`writePull [port] [pin] [up/UP/down/DOWN/disable/DISABLE/0/1/2]`\n");
+		printf("  -- 0 means disable, 1 means pull-up, 2 means pull-down.\n\n");
+		printf("The commands `header1` and `header2` do not take any parameters.\n");
 		return 0;
 	}
 
