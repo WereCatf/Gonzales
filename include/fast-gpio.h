@@ -16,6 +16,8 @@
 #define _GPIO_PULL_DOWN 2
 #define _GPIO_PULL_UNKNOWN 3
 
+//Returns 0 on success, 1 on error
+int initGpio();
 //Mux 0 is INPUT, 1 is OUTPUT and the rest are defined per-pin
 //Mux can be 0-6
 int readMux(int port, int pin);
