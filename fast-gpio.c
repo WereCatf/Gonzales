@@ -109,6 +109,9 @@ uint8_t pinsWithMux[]={
   0, 67, 1, 68, 2, 69, 3, 70, 4, 71, 9, 72, 10, 73, 11, 74, 12, 75
 };
 
+uint8_t portOffsetData[] = { 0*0x24+0x10, 1*0x24+0x10, 2*0x24+0x10,
+  3*0x24+0x10, 4*0x24+0x10, 5*0x24+0x10, 6*0x24+0x10 };
+
 char *muxToString(uint8_t port, uint8_t pin, uint8_t mux)
 {
   char *returnStr=strUnknownMux;
@@ -145,19 +148,11 @@ char *muxToString(uint8_t port, uint8_t pin, uint8_t mux)
 int initGpio()
 {
   int fd = open("/dev/mem", O_RDWR|O_SYNC);
-  if(fd < 0)
-  {
-    printf("Can't open /dev/mem!\n");
-    return 1;
-  }
+  if(fd < 0) return 1;
   // uint32_t addr = 0x01c20800 & ~(getpagesize() - 1);
   //Requires memmap to be on pagesize-boundary
   memmap=(uint8_t *)mmap(NULL, getpagesize()*2, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0x01c20000);
-  if(memmap == NULL)
-  {
-    printf("Can't mmap /dev/mem 0x01c20000!\n");
-    return 1;
-  }
+  if(memmap == NULL) return 1;
   close(fd);
 
   //Set memmap to point to PIO-registers
@@ -167,7 +162,7 @@ int initGpio()
 
 int readMux(int port, int pin)
 {
-	uint32_t *pioMem32, *configRegister;
+	volatile uint32_t *pioMem32, *configRegister;
 	pioMem32=(uint32_t *)(memmap+port*0x24);
 	configRegister=pioMem32+(pin >> 3);
 	return *configRegister >> ((pin & 7) * 4) & 7;
@@ -175,7 +170,8 @@ int readMux(int port, int pin)
 
 void writeMux(int port, int pin, uint8_t mux)
 {
-	uint32_t *pioMem32, *configRegister, mask;
+	volatile uint32_t *pioMem32, *configRegister;
+  uint32_t mask;
 
 	pioMem32=(uint32_t *)(memmap+port*0x24);
 	mux &= 7;
@@ -187,26 +183,25 @@ void writeMux(int port, int pin, uint8_t mux)
 
 int readPin(int port, int pin)
 {
-	uint32_t *pioMem32, *configRegister;
-	pioMem32=(uint32_t *)(memmap+port*0x24+0x10); //0x10 == port data-register
-	configRegister=pioMem32;
-	return (*configRegister >> pin) & 1;
+	volatile uint32_t *pioMem32;
+	pioMem32=(uint32_t *)(memmap+portOffsetData[port]);
+	return (*pioMem32 >> pin) & 1;
 }
 
 void writePin(int port, int pin, uint8_t value)
 {
 	value &= 1;
-	uint32_t *pioMem32, *configRegister, mask;
-	pioMem32=(uint32_t *)(memmap+port*0x24+0x10); //0x10 == port data-register
-	configRegister=pioMem32;
+	volatile uint32_t *pioMem32;
+  uint32_t mask;
+	pioMem32=(uint32_t *)(memmap+portOffsetData[port]);
 	mask = ~(1 << pin);
-	*configRegister &= mask;
-	*configRegister |= value << pin;
+	*pioMem32 &= mask;
+  if(value)	*pioMem32 |= value << pin;
 }
 
 uint8_t readPull(int port, int pin)
 {
-	uint32_t *pioMem32, *configRegister;
+	volatile uint32_t *pioMem32, *configRegister;
 	pioMem32=(uint32_t *)(memmap+port*0x24+0x1c); //0x1c == pull-register
 	configRegister=pioMem32+(pin >> 4);
 	return *configRegister >> ((pin & 15) * 2) & 3;
@@ -215,7 +210,8 @@ uint8_t readPull(int port, int pin)
 void writePull(int port, int pin, uint8_t value)
 {
 	value &= 3;
-	uint32_t *pioMem32, *configRegister, mask;
+	volatile uint32_t *pioMem32, *configRegister;
+  uint32_t mask;
 	pioMem32=(uint32_t *)(memmap+port*0x24+0x1c); //0x1c == pull-register
 	configRegister=pioMem32+(pin >> 4);
   mask = ~(3 << ((pin & 15) * 2));
@@ -225,32 +221,28 @@ void writePull(int port, int pin, uint8_t value)
 
 uint32_t readPort(int port)
 {
-	uint32_t *pioMem32, *configRegister;
-	pioMem32=(uint32_t *)(memmap+port*0x24+0x10); //0x10 == port data-register
-	configRegister=pioMem32;
-	return *configRegister;
+	volatile uint32_t *pioMem32;
+	pioMem32=(uint32_t *)(memmap+portOffsetData[port]);
+	return *pioMem32;
 }
 
 void writePort(int port, uint32_t data)
 {
-	uint32_t *pioMem32, *configRegister;
-	pioMem32=(uint32_t *)(memmap+port*0x24+0x10); //0x10 == port data-register
-	configRegister=pioMem32;
-	*configRegister=data;
+	volatile uint32_t *pioMem32;
+	pioMem32=(uint32_t *)(memmap+portOffsetData[port]);
+	*pioMem32=data;
 }
 
 void clearPort(int port, uint32_t mask)
 {
-	uint32_t *pioMem32, *configRegister;
-	pioMem32=(uint32_t *)(memmap+port*0x24+0x10); //0x10 == port data-register
-	configRegister=pioMem32;
-	*configRegister &=~mask;
+	volatile uint32_t *pioMem32;
+	pioMem32=(uint32_t *)(memmap+portOffsetData[port]);
+	*pioMem32 &=~mask;
 }
 
 void setPort(int port, uint32_t mask)
 {
-	uint32_t *pioMem32, *configRegister;
-	pioMem32=(uint32_t *)(memmap+port*0x24+0x10); //0x10 == port data-register
-	configRegister=pioMem32;
-	*configRegister |=mask;
+	volatile uint32_t *pioMem32;
+	pioMem32=(uint32_t *)(memmap+portOffsetData[port]);
+	*pioMem32 |=mask;
 }

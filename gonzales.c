@@ -128,7 +128,14 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-	if(initGpio()) return 1;
+	int error=initGpio();
+	if(error==1){
+		printf("Error opening /dev/mem!\n");
+		return 1;
+	} else if(error==2){
+		printf("Error mmapping memory!\n");
+		return 2;
+	}
 
 	if(argc < 4){
 		if(argc > 1 && strcmp(argv[1], "header1")==0){

@@ -16,7 +16,15 @@
 #define _GPIO_PULL_DOWN 2
 #define _GPIO_PULL_UNKNOWN 3
 
-//Returns 0 on success, 1 on error
+#define _GPIO_MUX_IN 0
+#define _GPIO_MUX_OUT 1
+
+#define _GPIO_HIGH 1
+#define _GPIO_LOW 0
+
+
+//Returns 0 on success, non-zero on error
+//1 == couldn't open /dev/mem, 2 == error mmapping memory
 int initGpio();
 //Mux 0 is INPUT, 1 is OUTPUT and the rest are defined per-pin
 //Mux can be 0-6
