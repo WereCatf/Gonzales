@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-mfloat-abi=hard -mfpu=vfpv3-d16 -march=armv7-a -mthumb -s -O2
+CFLAGS=-std=gnu99 -mfloat-abi=hard -mfpu=vfpv3-d16 -march=armv7-a -mthumb -s -Os
 INCLUDES=-I./include
 LFLAGS=
 LIBS=

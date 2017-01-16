@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <sys/mman.h>
 #include <fcntl.h>
-#include <stdio.h>
+#include <unistd.h>
 
 #include "fast-gpio.h"
 
@@ -181,15 +181,15 @@ void writeMux(int port, int pin, uint8_t mux)
 	*configRegister |= mux << ((pin & 7) * 4);
 }
 
-int readPin(int port, int pin)
-{
+extern inline int readPin(int port, int pin);
+/*{
 	volatile uint32_t *pioMem32;
 	pioMem32=(uint32_t *)(memmap+portOffsetData[port]);
 	return (*pioMem32 >> pin) & 1;
-}
+}*/
 
-void writePin(int port, int pin, uint8_t value)
-{
+extern inline void writePin(int port, int pin, uint8_t value);
+/*{
 	value &= 1;
 	volatile uint32_t *pioMem32;
 	uint32_t mask;
@@ -197,7 +197,7 @@ void writePin(int port, int pin, uint8_t value)
 	mask = ~(1 << pin);
 	*pioMem32 &= mask;
 	if(value) *pioMem32 |= value << pin;
-}
+}*/
 
 uint8_t readPull(int port, int pin)
 {
@@ -233,16 +233,17 @@ void writePort(int port, uint32_t data)
 	*pioMem32=data;
 }
 
-void clearPort(int port, uint32_t mask)
-{
+extern inline void clearPort(int port, uint32_t mask);
+/*{
 	volatile uint32_t *pioMem32;
 	pioMem32=(uint32_t *)(memmap+portOffsetData[port]);
 	*pioMem32 &=~mask;
-}
+}*/
 
-void setPort(int port, uint32_t mask)
-{
+extern inline void setPort(int port, uint32_t mask);
+/*{
 	volatile uint32_t *pioMem32;
 	pioMem32=(uint32_t *)(memmap+portOffsetData[port]);
 	*pioMem32 |=mask;
 }
+*/

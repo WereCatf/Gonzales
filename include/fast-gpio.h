@@ -22,6 +22,8 @@
 #define _GPIO_HIGH 1
 #define _GPIO_LOW 0
 
+extern uint8_t portOffsetData[];
+extern uint8_t *memmap;
 
 //Returns 0 on success, non-zero on error
 //1 == couldn't open /dev/mem, 2 == error mmapping memory
@@ -33,8 +35,22 @@ void writeMux(int port, int pin, uint8_t mux);
 //Port can be 0-6, ie. port A to port G
 //The code does NO checking if you try to use an illegal
 //port- or pin-number!
-int readPin(int port, int pin);
-void writePin(int port, int pin, uint8_t value);
+inline int readPin(int port, int pin)
+{
+	volatile uint32_t *pioMem32;
+	pioMem32=(uint32_t *)(memmap+portOffsetData[port]);
+	return (*pioMem32 >> pin) & 1;
+}
+inline void writePin(int port, int pin, uint8_t value)
+{
+	value &= 1;
+	volatile uint32_t *pioMem32;
+	uint32_t mask;
+	pioMem32=(uint32_t *)(memmap+portOffsetData[port]);
+	mask = ~(1 << pin);
+	*pioMem32 &= mask;
+	if(value) *pioMem32 |= value << pin;
+}
 //0 is no pull, 1 is pull-up, 2 is pull-down, 3 undefined
 uint8_t readPull(int port, int pin);
 void writePull(int port, int pin, uint8_t value);
@@ -43,8 +59,18 @@ char *muxToString(uint8_t port, uint8_t pin, uint8_t mux);
 uint32_t readPort(int port);
 void writePort(int port, uint32_t data);
 //Set the bits HIGH for the pins you want cleared, ie. LOW
-void clearPort(int port, uint32_t mask);
+inline void clearPort(int port, uint32_t mask)
+{
+	volatile uint32_t *pioMem32;
+	pioMem32=(uint32_t *)(memmap+portOffsetData[port]);
+	*pioMem32 &=~mask;
+}
 //Set the bits HIGH for the pins you want set, ie. HIGH
-void setPort(int port, uint32_t mask);
+inline void setPort(int port, uint32_t mask)
+{
+	volatile uint32_t *pioMem32;
+	pioMem32=(uint32_t *)(memmap+portOffsetData[port]);
+	*pioMem32 |=mask;
+}
 
 #endif
