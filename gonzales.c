@@ -100,7 +100,7 @@ void printPair(int port, int pin, char *strSystem, int port2, int pin2, char *st
 
 int main(int argc, char* argv[])
 {
-	uint8_t port, pin, value;
+	uint8_t port, pin, value, quiet;
 
 	if(argc <= 1 || strcmp(argv[1], "-h")==0 || strcmp(argv[1], "--help")==0){
 		printf("Chippy Gonzales is a tool for directly manipulating the\n");
@@ -128,6 +128,9 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
+	quiet=0;
+	if(strcmp(argv[1], "-q")==0 || strcmp(argv[1], "--quiet")==0) quiet=1;
+
 	int error=initGpio();
 	if(error==1){
 		printf("Error opening /dev/mem!\n");
@@ -137,8 +140,8 @@ int main(int argc, char* argv[])
 		return 2;
 	}
 
-	if(argc < 4){
-		if(argc > 1 && strcmp(argv[1], "header1")==0){
+	if(argc < (4+quiet)){
+		if(argc > (1+quiet) && strcmp(argv[1+quiet], "header1")==0){
 			printf("      Mux  │ Pull │  Function   J13    Function  │ Pull │  Mux\n");
 			printf("      ─────┼──────┼──────────────────────────────┼──────┼─────\n");
 			printPair(0, 255, "GND", 0, 255, "CHG-IN");
@@ -165,7 +168,7 @@ int main(int argc, char* argv[])
 			printf("      Mux  │ Pull │  Function   J13    Function  │ Pull │  Mux\n");
 			return 0;
 		} else
-		if(argc > 1 && strcmp(argv[1], "header2")==0){
+		if(argc > (1+quiet) && strcmp(argv[1+quiet], "header2")==0){
 			printf("      Mux  │ Pull │  Function   J14    Function  │ Pull │  Mux\n");
 			printf("      ─────┼──────┼──────────────────────────────┼──────┼─────\n");
 			printPair(0, 255, "GND", 0, 255, "5V-Out");
@@ -197,11 +200,11 @@ int main(int argc, char* argv[])
 	}
 
 	port = 255;
-	if(*argv[2] >= 'a' && *argv[2] <= 'g') port = *argv[2] - 'a';
-	if(*argv[2] >= 'A' && *argv[2] <= 'G') port = *argv[2] - 'A';
-	if(*argv[2] >= '0' && *argv[2] <= '6') port = *argv[2] - '0';
+	if(*argv[2+quiet] >= 'a' && *argv[2+quiet] <= 'g') port = *argv[2+quiet] - 'a';
+	if(*argv[2+quiet] >= 'A' && *argv[2+quiet] <= 'G') port = *argv[2+quiet] - 'A';
+	if(*argv[2+quiet] >= '0' && *argv[2+quiet] <= '6') port = *argv[2+quiet] - '0';
 
-	pin = atoi(argv[3]);
+	pin = atoi(argv[3+quiet]);
 	if(port > 6){
 		printf("Port must be in the range of 0-6, or a-g!\n");
 		return 1;
@@ -211,17 +214,17 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	if(strcmp(argv[1], "readPin")==0){
+	if(strcmp(argv[1+quiet], "readPin")==0){
 		printf("Port %c, pin %d: ", port+'A', pin);
 		if(readPin(port, pin)) printf("HIGH\n");
 		else printf("LOW\n");
 	}
-	else if(strcmp(argv[1], "readMux")==0){
+	else if(strcmp(argv[1+quiet], "readMux")==0){
 		printf("Port %c, pin %d: ", port+'A', pin);
 		value=readMux(port, pin);
 		printf("%s\n", muxToString(port, pin, value));
 	}
-	else if(strcmp(argv[1], "readPull")==0){
+	else if(strcmp(argv[1+quiet], "readPull")==0){
 		printf("Port %c, pin %d: ", port+'A', pin);
 		switch(readPull(port, pin)){
 			case 0:
@@ -238,77 +241,83 @@ int main(int argc, char* argv[])
 				break;
 		}
 	}
-	else if(strcmp(argv[1], "writePull")==0){
-		if(argc < 5){
+	else if(strcmp(argv[1+quiet], "writePull")==0){
+		if(argc < (5+quiet)){
 			printf("Too few parameters!\n");
 			return 1;
 		}
-		value = atoi(argv[4]);
-		if(strcmp(argv[4], "up")==0 || strcmp(argv[4], "UP")==0) value=1;
-		else if(strcmp(argv[4], "down")==0 || strcmp(argv[4], "DOWN")==0) value=2;
-		else if(strcmp(argv[4], "disable")==0 || strcmp(argv[4], "disabled")==0
-			|| strcmp(argv[4], "DISABLE")==0 || strcmp(argv[4], "DISABLED")==0) value=0;
-		printf("New setting for port %c, pin %d: ", port+'A', pin);
-		switch(value){
-			case 0:
-				printf("pull-up/-down disabled.\n");
-				break;
-			case 1:
-				printf("pull-up enabled.\n");
-				break;
-			case 2:
-				printf("pull-down enabled.\n");
-				break;
-			default:
-				printf("unknown status.\n");
-				break;
+		value = atoi(argv[4+quiet]);
+		if(strcmp(argv[4+quiet], "up")==0 || strcmp(argv[4+quiet], "UP")==0) value=1;
+		else if(strcmp(argv[4+quiet], "down")==0 || strcmp(argv[4+quiet], "DOWN")==0) value=2;
+		else if(strcmp(argv[4+quiet], "disable")==0 || strcmp(argv[4+quiet], "disabled")==0
+			|| strcmp(argv[4+quiet], "DISABLE")==0 || strcmp(argv[4+quiet], "DISABLED")==0) value=0;
+		if(!quiet){
+			printf("New setting for port %c, pin %d: ", port+'A', pin);
+			switch(value){
+				case 0:
+					printf("pull-up/-down disabled.\n");
+					break;
+				case 1:
+					printf("pull-up enabled.\n");
+					break;
+				case 2:
+					printf("pull-down enabled.\n");
+					break;
+				default:
+					printf("unknown status.\n");
+					break;
+			}
 		}
 		writePull(port, pin, value);
 	}
-	else if(strcmp(argv[1], "writePin")==0){
-		if(argc < 5){
+	else if(strcmp(argv[1+quiet], "writePin")==0){
+		if(argc < (5+quiet)){
 			printf("Too few parameters!\n");
 			return 1;
 		}
-		value = atoi(argv[4]);
-		if(strcmp(argv[4], "high")==0 || strcmp(argv[4], "HIGH")==0) value=1;
-		else if(strcmp(argv[4], "low")==0 || strcmp(argv[4], "LOW")==0) value=2;
-		printf("New setting for port %c, pin %d: ", port+'A', pin);
-		switch(value){
-			case 0:
-				printf("LOW.\n");
-				break;
-			case 1:
-				printf("HIGH.\n");
-				break;
-			default:
-				printf("unknown value given.\n");
-				return 1;
-				break;
+		value = atoi(argv[4+quiet]);
+		if(strcmp(argv[4+quiet], "high")==0 || strcmp(argv[4+quiet], "HIGH")==0) value=1;
+		else if(strcmp(argv[4+quiet], "low")==0 || strcmp(argv[4+quiet], "LOW")==0) value=2;
+		if(!quiet){
+			printf("New setting for port %c, pin %d: ", port+'A', pin);
+			switch(value){
+				case 0:
+					printf("LOW.\n");
+					break;
+				case 1:
+					printf("HIGH.\n");
+					break;
+				default:
+					printf("unknown value given.\n");
+					return 1;
+					break;
+			}
 		}
 		writePin(port, pin, value);
 	}
-	else if(strcmp(argv[1], "writeMux")==0){
-		if(argc < 5){
+	else if(strcmp(argv[1+quiet], "writeMux")==0){
+		if(argc < (5+quiet)){
 			printf("Too few parameters!\n");
 			return 1;
 		}
-		value = atoi(argv[4]);
-		if(strcmp(argv[4], "input")==0 || strcmp(argv[4], "INPUT")==0
-			|| strcmp(argv[4], "in")==0 || strcmp(argv[4], "IN")==0) value=0;
-		else if(strcmp(argv[4], "output")==0 || strcmp(argv[4], "OUTPUT")==0
-				|| strcmp(argv[4], "out")==0 || strcmp(argv[4], "OUT")==0) value=1;
-		printf("New setting for port %c, pin %d: ", port+'A', pin);
-		switch(value){
-			case 0:
-				printf("INPUT.\n");
-				break;
-			case 1:
-				printf("OUTPUT.\n");
-				break;
-			default:
-				printf("altmux 0x%x.\n", value);
-				break;
+		value = atoi(argv[4+quiet]);
+		if(strcmp(argv[4+quiet], "input")==0 || strcmp(argv[4+quiet], "INPUT")==0
+			|| strcmp(argv[4+quiet], "in")==0 || strcmp(argv[4+quiet], "IN")==0) value=0;
+		else if(strcmp(argv[4+quiet], "output")==0 || strcmp(argv[4+quiet], "OUTPUT")==0
+				|| strcmp(argv[4+quiet], "out")==0 || strcmp(argv[4+quiet], "OUT")==0) value=1;
+		if(!quiet){
+			printf("New setting for port %c, pin %d: ", port+'A', pin);
+			switch(value){
+				case 0:
+					printf("INPUT.\n");
+					break;
+				case 1:
+					printf("OUTPUT.\n");
+					break;
+				default:
+					printf("altmux 0x%x.\n", value);
+					break;
+			}
 		}
 		writeMux(port, pin, value);
 	}
