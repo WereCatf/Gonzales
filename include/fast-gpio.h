@@ -72,5 +72,8 @@ inline void setPort(int port, uint32_t mask)
 	pioMem32=(uint32_t *)(memmap+portOffsetData[port]);
 	*pioMem32 |=mask;
 }
+//write the debounce-register. Write '1' to disable debounce.
+void writeDebounce(int data);
+uint32_t readDebounce();
 
 #endif

@@ -5,8 +5,10 @@ LFLAGS=
 LIBS=
 MAINSRCS=gonzales.c fast-gpio.c
 BENCHSRCS=bench.c fast-gpio.c
+DHTSRCS=dhtsensor.c fast-gpio.c
 MAINOBJS=$(MAINSRCS:.c=.o)
 BENCHOBJS=$(BENCHSRCS:.c=.o)
+DHTOBJS=$(DHTSRCS:.c=.o)
 LSOC=
 DLSOC=
 USELIBSOC=0
@@ -18,16 +20,20 @@ endif
 
 MAIN=gonzales
 BENCH=bench
+DHT=dhtsensor
 
 .PHONY: depend clean
 
-all:	$(MAIN) $(BENCH)
+all:	$(MAIN) $(BENCH) $(DHT)
 
 $(MAIN): $(MAINOBJS)
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(MAIN) $(MAINOBJS) $(LFLAGS) $(LIBS)
 
 $(BENCH): $(BENCHOBJS)
 	$(CC) $(LSOC) $(CFLAGS) $(INCLUDES) -o $(BENCH) $(BENCHOBJS) $(LFLAGS) $(LIBS)
+
+$(DHT): $(DHTOBJS)
+		$(CC) $(CFLAGS) $(INCLUDES) -o $(DHT) $(DHTOBJS) $(LFLAGS) $(LIBS)
 
 .c.o:
 	$(CC) $(DLSOC) $(CFLAGS) $(INCLUDES) -c $< -o $@

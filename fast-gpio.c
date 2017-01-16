@@ -181,24 +181,6 @@ void writeMux(int port, int pin, uint8_t mux)
 	*configRegister |= mux << ((pin & 7) * 4);
 }
 
-extern inline int readPin(int port, int pin);
-/*{
-	volatile uint32_t *pioMem32;
-	pioMem32=(uint32_t *)(memmap+portOffsetData[port]);
-	return (*pioMem32 >> pin) & 1;
-}*/
-
-extern inline void writePin(int port, int pin, uint8_t value);
-/*{
-	value &= 1;
-	volatile uint32_t *pioMem32;
-	uint32_t mask;
-	pioMem32=(uint32_t *)(memmap+portOffsetData[port]);
-	mask = ~(1 << pin);
-	*pioMem32 &= mask;
-	if(value) *pioMem32 |= value << pin;
-}*/
-
 uint8_t readPull(int port, int pin)
 {
 	volatile uint32_t *pioMem32, *configRegister;
@@ -233,17 +215,21 @@ void writePort(int port, uint32_t data)
 	*pioMem32=data;
 }
 
-extern inline void clearPort(int port, uint32_t mask);
-/*{
+void writeDebounce(int data)
+{
 	volatile uint32_t *pioMem32;
-	pioMem32=(uint32_t *)(memmap+portOffsetData[port]);
-	*pioMem32 &=~mask;
-}*/
-
-extern inline void setPort(int port, uint32_t mask);
-/*{
-	volatile uint32_t *pioMem32;
-	pioMem32=(uint32_t *)(memmap+portOffsetData[port]);
-	*pioMem32 |=mask;
+	pioMem32=(uint32_t *)(memmap+0x218);
+	*pioMem32=data;
 }
-*/
+
+uint32_t readDebounce()
+{
+	volatile uint32_t *pioMem32;
+	pioMem32=(uint32_t *)(memmap+0x218);
+	return *pioMem32;
+}
+
+extern inline void clearPort(int port, uint32_t mask);
+extern inline void setPort(int port, uint32_t mask);
+extern inline int readPin(int port, int pin);
+extern inline void writePin(int port, int pin, uint8_t value);
