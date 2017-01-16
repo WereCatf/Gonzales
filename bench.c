@@ -35,12 +35,15 @@ int main(int argc, char* argv[])
 
 #ifdef _WITH_LIBSOC
 	gpio *testPin;
+	int libsocOrigMux;
 	testPin = libsoc_gpio_request(121, LS_SHARED);
 	if(testPin == NULL)
 	{
 			printf("Error setting up libsoc!\n");
 			return 1;
 	}
+	libsocOrigMux = libsoc_gpio_get_direction(testPin);
+	libsoc_gpio_set_direction(testPin, OUTPUT);
 	printf("Test 10 million pin-togglings using libsoc on PD25...\n");
 	clock_gettime(CLOCK_MONOTONIC, &timeStart);
 	for(counter=0; counter<5000000; counter++){
@@ -52,7 +55,6 @@ int main(int argc, char* argv[])
 		+ ( timeEnd.tv_nsec - timeStart.tv_nsec )
 		/ 1E9;
 	printf( "That took %.02lf seconds at ~%.02lfMbps\n", accum,  1E7 / accum / 1E6);
-	libsoc_gpio_free(testPin);
 #endif
 
 	printf("Test 10 million pin-togglings using writePin on PD25...\n");
@@ -79,6 +81,11 @@ int main(int argc, char* argv[])
 		+ ( timeEnd.tv_nsec - timeStart.tv_nsec )
 		/ 1E9;
 	printf( "That took %.02lf seconds at ~%.02lfMbps\n", accum,  1E7 / accum / 1E6);
+
+#ifdef _WITH_LIBSOC
+	libsoc_gpio_set_direction(testPin, libsocOrigMux);
+	libsoc_gpio_free(testPin);
+#endif
 
 	writeMux(3, 25, origMux);
 	writePin(3, 25, origValue);
